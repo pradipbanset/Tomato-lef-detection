@@ -36,7 +36,7 @@ const App = () => {
     setPrediction(null);
 
     const formData = new FormData();
-    formData.append("image", imageFile);
+    formData.append("file", imageFile);
 
 
     try {

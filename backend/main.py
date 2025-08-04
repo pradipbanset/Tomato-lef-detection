@@ -61,8 +61,8 @@ app.add_middleware(
 
 
 @app.post("/predict")
-async def predict(image: UploadFile = File(...)):
-    image_bytes = await image.read()
+async def predict(file: UploadFile = File(...)):
+    image_bytes = await file.read()
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     input_tensor = transform(image).unsqueeze(0).to(device)
     
