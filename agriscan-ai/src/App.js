@@ -43,7 +43,7 @@ const App = () => {
     formData.append("file", imageFile);
 
     try {
-      const response = await fetch(" https://tomato-lef-detection.onrender.com/clear", {
+      const response = await fetch(" https://tomato-lef-detection.onrender.com/", {
         method: "POST",
         body: formData,
       });
