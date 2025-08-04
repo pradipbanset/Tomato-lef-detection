@@ -38,7 +38,6 @@ const App = () => {
     const formData = new FormData();
     formData.append("file", imageFile);
 
-
     try {
       const response = await fetch(
         "https://tomato-lef-detection.onrender.com/predict",
@@ -47,22 +46,41 @@ const App = () => {
           body: formData,
         }
       );
-      
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: "Failed to get prediction from backend." }));
-        throw new Error(errorData.detail || "Network response was not ok");
+        // Parse JSON or fallback to a default shape
+        const errorData = await response
+          .json()
+          .catch(() => ({ detail: "Failed to get prediction from backend." }));
+
+        // If detail is an object, dig out a real string
+        let msg = errorData.detail;
+        if (typeof msg === "object" && msg !== null) {
+          msg = msg.error || msg.message || JSON.stringify(msg);
+        }
+
+        throw new Error(msg);
       }
 
       const result = await response.json();
-      const formattedName = result.prediction.replace("Tomato___", "").replace(/_/g, " ");
-      
+      const formattedName = result.prediction
+        .replace("Tomato___", "")
+        .replace(/_/g, " ");
+
       setPrediction({ name: formattedName });
       setActiveTab("results");
 
     } catch (error) {
-      console.error("Error:", error);
-      alert(`There was an error processing the image: ${error.message}`);
+      // 1) Log full error so you can inspect it in DevTools
+      console.error("Full image-processing error object:", error);
+
+      // 2) Pick a clean message for the user
+      const userMsg =
+        error instanceof Error
+          ? error.message
+          : JSON.stringify(error, null, 2);
+
+      alert(`Image processing failed:\n${userMsg}`);
     } finally {
       setIsProcessing(false);
     }
@@ -74,7 +92,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A0E0F] via-[#1C2A1F] to-[#1B4332] text-[#FEFEFE] overflow-x-hidden">
-      {/* Header and other static JSX remains the same */}
+      {/* Header */}
       <header className="relative z-10 px-6 py-4 border-b border-[#1B4332]/30 backdrop-blur-sm">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
@@ -85,19 +103,21 @@ const App = () => {
               AgriScan AI
             </h1>
           </div>
-         
           <button className="bg-gradient-to-r from-[#FF6B35] to-[#D62828] hover:from-[#FF6B35]/90 hover:to-[#D62828]/90 text-white px-6 py-2 rounded-full font-medium transition-all duration-300 hover:shadow-lg hover:shadow-[#FF6B35]/25 transform hover:-translate-y-0.5">
             Get Started
           </button>
         </div>
       </header>
-      
+
+      {/* Main Content */}
       <main className="relative z-10">
         <section className="py-20 px-6">
           <div className="max-w-7xl mx-auto text-center">
             <div className="mb-8">
               <h2 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-                <span className="bg-gradient-to-r from-[#9BF6FF] via-[#2EC4B6] to-[#1B4332] bg-clip-text text-transparent">AI-Powered</span>
+                <span className="bg-gradient-to-r from-[#9BF6FF] via-[#2EC4B6] to-[#1B4332] bg-clip-text text-transparent">
+                  AI-Powered
+                </span>
                 <br />
                 <span className="text-white">Plant Health</span>
                 <span className="text-[#FF6B35]"> Detection</span>
@@ -106,13 +126,20 @@ const App = () => {
                 Advanced deep learning models analyze tomato leaves, providing instant disease detection.
               </p>
             </div>
-            {/* File Upload Zone */}
-            <div 
+
+            {/* Upload Zone */}
+            <div
               className="relative max-w-2xl mx-auto mt-12"
               onDragOver={handleDragOver}
               onDrop={handleDrop}
             >
-              <div className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-500 ${ uploadedImage ? 'border-[#2EC4B6]/50 bg-[#1B4332]/30' : 'border-[#9BF6FF]/30 hover:border-[#9BF6FF]/60 hover:bg-[#1B4332]/20'}`}>
+              <div
+                className={`relative border-2 border-dashed rounded-2xl p-12 text-center transition-all duration-500 ${
+                  uploadedImage
+                    ? 'border-[#2EC4B6]/50 bg-[#1B4332]/30'
+                    : 'border-[#9BF6FF]/30 hover:border-[#9BF6FF]/60 hover:bg-[#1B4332]/20'
+                }`}
+              >
                 {!uploadedImage ? (
                   <div className="space-y-6">
                     <div className="w-20 h-20 mx-auto bg-gradient-to-br from-[#FF6B35] to-[#D62828] rounded-full flex items-center justify-center text-3xl animate-pulse">
@@ -120,8 +147,10 @@ const App = () => {
                     </div>
                     <div>
                       <p className="text-2xl font-semibold mb-2">Upload Leaf Image</p>
-                      <p className="text-[#B8BCC1] mb-6">Drag & drop your tomato leaf photo or click to browse</p>
-                      <button 
+                      <p className="text-[#B8BCC1] mb-6">
+                        Drag & drop your tomato leaf photo or click to browse
+                      </p>
+                      <button
                         onClick={() => fileInputRef.current?.click()}
                         className="bg-gradient-to-r from-[#FF6B35] to-[#D62828] hover:from-[#FF6B35]/90 hover:to-[#D62828]/90 text-white px-8 py-3 rounded-full font-medium transition-all duration-300 hover:shadow-lg hover:shadow-[#FF6B35]/25 transform hover:-translate-y-0.5"
                       >
@@ -132,22 +161,22 @@ const App = () => {
                 ) : (
                   <div className="space-y-6">
                     <div className="relative">
-                      <img 
-                        src={uploadedImage} 
-                        alt="Uploaded leaf" 
+                      <img
+                        src={uploadedImage}
+                        alt="Uploaded leaf"
                         className="mx-auto max-h-64 rounded-xl shadow-2xl border border-[#1B4332]/30"
                       />
                     </div>
                     <div className="space-y-4">
                       <p className="text-lg font-medium">Image ready for analysis.</p>
                       <div className="flex justify-center space-x-4">
-                        <button 
+                        <button
                           onClick={() => fileInputRef.current?.click()}
                           className="text-[#B8BCC1] hover:text-[#9BF6FF] transition-colors"
                         >
                           Change Image
                         </button>
-                        <button 
+                        <button
                           onClick={handleAnalyze}
                           disabled={isProcessing}
                           className="bg-gradient-to-r from-[#2EC4B6] to-[#1B4332] hover:from-[#2EC4B6]/90 hover:to-[#1B4332]/90 text-white px-6 py-2 rounded-full font-medium transition-all duration-300 disabled:opacity-50"
@@ -159,23 +188,30 @@ const App = () => {
                   </div>
                 )}
               </div>
-              
-              
-              <input 
+
+              <input
                 ref={fileInputRef}
-                type="file" 
-                accept="image/*" 
+                type="file"
+                accept="image/*"
                 onChange={handleFileUpload}
                 className="hidden"
               />
 
-              {/* Processing Animation */}
               {isProcessing && (
                 <div className="mt-8 space-y-4">
                   <div className="flex justify-center space-x-2">
-                    <div className="w-3 h-3 bg-[#9BF6FF] rounded-full animate-bounce" style={{ animationDelay: '0s' }}></div>
-                    <div className="w-3 h-3 bg-[#9BF6FF] rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                    <div className="w-3 h-3 bg-[#9BF6FF] rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></div>
+                    <div
+                      className="w-3 h-3 bg-[#9BF6FF] rounded-full animate-bounce"
+                      style={{ animationDelay: '0s' }}
+                    ></div>
+                    <div
+                      className="w-3 h-3 bg-[#9BF6FF] rounded-full animate-bounce"
+                      style={{ animationDelay: '0.2s' }}
+                    ></div>
+                    <div
+                      className="w-3 h-3 bg-[#9BF6FF] rounded-full animate-bounce"
+                      style={{ animationDelay: '0.4s' }}
+                    ></div>
                   </div>
                   <p className="text-[#B8BCC1]">AI is analyzing your leaf sample...</p>
                 </div>
@@ -184,7 +220,7 @@ const App = () => {
           </div>
         </section>
 
-        {/* RESULTS SECTION */}
+        {/* Results */}
         {prediction && activeTab === 'results' && (
           <section className="py-20 px-6">
             <div className="max-w-4xl mx-auto">
@@ -192,13 +228,11 @@ const App = () => {
                 <h3 className="text-4xl font-bold mb-6">Analysis Results</h3>
               </div>
               <div className="bg-[#1B4332]/20 backdrop-blur-sm rounded-2xl p-8 border border-[#1B4332]/30">
-                <h4 className="text-2xl font-bold mb-6">
-                  Disease Detected
-                </h4>
-                
+                <h4 className="text-2xl font-bold mb-6">Disease Detected</h4>
                 <div className="flex items-center justify-center space-x-6 mb-6 text-center">
-                  {/* Improvement: Make check case-insensitive for robustness */}
-                  <div className="text-6xl">{prediction.name.toLowerCase() === 'healthy' ? '✅' : '⚠️'}</div>
+                  <div className="text-6xl">
+                    {prediction.name.toLowerCase() === 'healthy' ? '✅' : '⚠️'}
+                  </div>
                   <div>
                     <h5 className="text-4xl font-bold text-white">
                       {prediction.name}
@@ -212,8 +246,8 @@ const App = () => {
         )}
       </main>
 
-       {/* Footer */}
-       <footer className="py-12 px-6 border-t border-[#1B4332]/30">
+      {/* Footer */}
+      <footer className="py-12 px-6 border-t border-[#1B4332]/30">
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center space-x-3 mb-6 md:mb-0">
@@ -224,7 +258,11 @@ const App = () => {
             </div>
             <div className="flex space-x-6">
               {['Privacy', 'Terms', 'Contact', 'Support'].map((item) => (
-                <a key={item} href="#" className="text-[#B8BCC1] hover:text-[#9BF6FF] transition-colors">
+                <a
+                  key={item}
+                  href="#"
+                  className="text-[#B8BCC1] hover:text-[#9BF6FF] transition-colors"
+                >
                   {item}
                 </a>
               ))}
