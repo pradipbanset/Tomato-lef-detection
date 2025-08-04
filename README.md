@@ -26,3 +26,7 @@ docker-compose up --build -d
 Open the app
 Frontend: http://localhost
 API docs: http://localhost:8000/docs
+
+## Live Demo
+
+Check out the live project here: [Tomato Leaf Detection](https://tomato-lef-detection.vercel.app)
