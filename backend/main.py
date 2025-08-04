@@ -35,13 +35,7 @@ class_names = [
     "powdery_mildew"
 ]
 
-# Image preprocessing pipeline
-# transform = transforms.Compose([
-#     transforms.Resize((224, 222)),
-#     transforms.ToTensor(),
-#     transforms.Normalize(mean=[0.485, 0.456, 0.406],  # Example normalization
-#                          std=[0.229, 0.224, 0.225])
-# ])
+
 
 # Image preprocessing pipeline - MUST match training exactly!
 transform = transforms.Compose([
@@ -52,27 +46,19 @@ transform = transforms.Compose([
 app = FastAPI()
 
 # CORS middleware for frontend access (adjust origins for production)
+# CORS middleware for frontend access (adjust origins for production)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",                           # for local dev
+        "https://tomato-lef-detection.vercel.app",         # your deployed frontend
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# @app.post("/predict")
-# async def predict(file: UploadFile = File(...)):
-#     image_bytes = await file.read()
-#     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
 
-#     input_tensor = transform(image).unsqueeze(0).to(device)
-
-#     with torch.no_grad():
-#         outputs = model(input_tensor)
-#         predicted_idx = torch.argmax(outputs, dim=1).item()
-#         predicted_label = class_names[predicted_idx]
-
-#     return {"prediction": predicted_label}
 
 @app.post("/predict")
 async def predict(file: UploadFile = File(...)):

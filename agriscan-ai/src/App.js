@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState, useRef } from 'react';
 
 const App = () => {
@@ -40,13 +36,18 @@ const App = () => {
     setPrediction(null);
 
     const formData = new FormData();
-    formData.append("file", imageFile);
+    formData.append("image", imageFile);
+
 
     try {
-      const response = await fetch(" https://tomato-lef-detection.onrender.com/", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        "https://tomato-lef-detection.onrender.com/predict",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
+      
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ detail: "Failed to get prediction from backend." }));
